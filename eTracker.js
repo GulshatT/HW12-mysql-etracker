@@ -83,6 +83,19 @@ function startList() {
   })
 }
 
+//creating functions
+function viewAllDepartments() {
+  connection.query(
+    "SELECT * FROM Department", (err, res) => {
+      if (err) {
+        throw err;
+      }
+      console.table(res)
+      startList();
+    }
+  )
+}
+
 // Connect to the DB
 connection.connect((err) => {
   if (err) throw err;
