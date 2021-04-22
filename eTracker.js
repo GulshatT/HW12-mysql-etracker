@@ -16,7 +16,7 @@ const connection = mysql.createConnection({
   database: "employee_DB",
 });
 
-function runList() {
+function startList() {
   inquirer.prompt(
     {
     type: "list",
@@ -38,7 +38,48 @@ function runList() {
       "Exit"
     ]
   }).then(answers => {
+    switch (answer.option) {
+      case "View all Departments":
+        viewAllDepartments();
+        break;
+      
+      case "View All Roles":
+        viewAllRoles();
+        break;
+      
+      case "View All Employees":
+        viewAllEmployees();
+        break;
+      
+      case "Add Department":
+        addDepartment();
+        break;
 
+      case "Add Roles":
+        addRoles();
+        break;
+      
+      case "Add Employees":
+        addEmployee();
+        break;
+
+      case "Delete Roles":
+        deleteRole();
+        break;
+
+      case "Update Employee Manager":
+        updateManager();
+        break
+      
+      case "View Employee By Manager":
+        viewEmployeeByManager();
+        break;
+
+      case "Exit":
+        connection.end();
+        console.log("Good bye");
+        break;  
+    }
   })
 }
 
@@ -46,5 +87,5 @@ function runList() {
 connection.connect((err) => {
   if (err) throw err;
   console.log(`connected as id ${connection.threadId}\n`);
-  runList();
+  startList();
 });
