@@ -1,3 +1,3 @@
-const pass = 'Freddie86@';
+const pass = "Freddie86@";
 
 module.exports = pass; 

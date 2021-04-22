@@ -1,37 +1,50 @@
-const mysql = require('mysql');
-const inquirer = require('inquirer');
+const mysql = require("mysql");
+const inquirer = require("inquirer");
 const pass = require("./config");
 
 const connection = mysql.createConnection({
-  host: 'localhost',
+  host: "localhost",
 
   // Your port; if not 3306
   port: 3306,
 
   // Your username
-  user: 'root',
+  user: "root",
 
   // Be sure to update with your own MySQL password!
   password: pass,
-  database: 'employee_DB',
+  database: "employee_DB",
 });
 
-// const start = () {
-//   inquirer.prompt({
-//     type: 'list',
-//     message: 'What would you like to do?',
-//     name: 'option',
-//     choices: [
-//       'View all departments',
-//       'View all Roles',
+function runList() {
+  inquirer.prompt(
+    {
+    type: "list",
+    message: "What would you like to do?",
+    name: "option",
+    choices: [
+      "View all Departments",
+      "View all Roles",
+      "View all Employees",
+      "Add Departments",
+      "Add Roles",
+      "Add Employees",
+      "Delete Departments",
+      "Delete Employee",
+      "Delete Roles",
+      "Update Employee Roles",
+      "Update Employee Manager",
+      "View Employee By Manager",
+      "Exit"
+    ]
+  }).then(answers => {
 
-//     ]
-//   })
-// }
+  })
+}
 
 // Connect to the DB
 connection.connect((err) => {
   if (err) throw err;
   console.log(`connected as id ${connection.threadId}\n`);
-  // start();
+  runList();
 });
