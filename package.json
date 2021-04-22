@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/GulshatT/HW12-mysql-etracker#readme",
   "dependencies": {
+    "inquirer": "^8.0.0",
     "mysql": "^2.18.1"
   }
 }
