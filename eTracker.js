@@ -1,6 +1,6 @@
 const mysql = require("mysql");
 const inquirer = require("inquirer");
-const pass = require("./config");
+const pass = require("./img/config");
 
 const connection = mysql.createConnection({
   host: "localhost",
