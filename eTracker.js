@@ -4,16 +4,13 @@ const pass = require("./img/config");
 
 const connection = mysql.createConnection({
   host: "localhost",
-
   // Your port; if not 3306
   port: 3306,
-
   // Your username
   user: "root",
-
   // Be sure to update with your own MySQL password!
   password: pass,
-  database: "employee_DB",
+  database: "employee_db",
 });
 
 function startList() {
@@ -26,7 +23,7 @@ function startList() {
       "View all Departments",
       "View all Roles",
       "View all Employees",
-      "Add Departments",
+      "Add department",
       "Add Roles",
       "Add Employees",
       "Delete Departments",
@@ -38,20 +35,23 @@ function startList() {
       "Exit"
     ]
   }).then(answer => {
+    console.log(answer.option)
     switch (answer.option) {
       case "View all Departments":
         viewAllDepartments();
         break;
       
-      case "View All Roles":
+      case "View all Roles":
+        console.log("here")
         viewAllRoles();
         break;
       
-      case "View All Employees":
+      case "View all Employees":
         viewAllEmployees();
         break;
       
-      case "Add Department":
+      case "Add department":
+        console.log(answer.option)
         addDepartment();
         break;
 
@@ -95,8 +95,11 @@ function viewAllDepartments() {
     }
   )
 }
+
 function viewAllRoles() {
-  connection.query("select ro.title as Role_title, ro.salary as Salary , dept.name as DepartmentName from Role ro left join department as dept on dept.id = ro.department_id", (err, res) => {
+  console.log("roles")
+  connection.query(
+    "SELECT * FROM Role", (err, res) => {
     if (err) {
       throw err;
     }
@@ -105,15 +108,16 @@ function viewAllRoles() {
     }
   )
 }
+
 function viewAllEmployees() {
-  const sql = 'Select emp.id as EmployeeID, concat(emp.first_name,"  ",emp.last_name ) as EmployeeName , ro.title as Job_tittle, ro.salary as Salary,dept.name as Department_Name,concat(emp2.first_name,"  ",emp2.last_name) as ManagerName from employee_DB.employee as emp left join employee_DB.employee as emp2 on emp2.id=emp.manager_id left join employee_DB.Role as ro on emp.role_id=ro.id left join employee_DB.department as dept on dept.id = ro.department_id';
-  connection.query (
-    sql, (err, res) => {
-      if (err) {
-        throw err;
-      }
-      console.table(res)
-      startList();
+  console.log("employees")
+  connection.query(
+    "SELECT * FROM Employee", (err, res) => {
+    if (err) {
+      throw err;
+    }
+    console.table(res);
+    startList();
     }
   )
 }
@@ -127,17 +131,16 @@ function addDepartment() {
     }
   ]).then(answer => {
     console.log(answer);
-    connection.query("INSERT INTO department SET?", {name: answer.department}, (err, res) => {
+    connection.query("INSERT INTO department SET?", { name: answer.department }, (err, res) => {
       if (err) throw err;
       console.log("Added new department");
       startList();
-
     });
   });
 }
 
 function addRoles() {
-  console.log("add roles");
+  console.log("add role");
 
   connection.promise().query("SELECT * FROM Department")
   .then((res) => {
@@ -169,9 +172,9 @@ function addRoles() {
     ])
   }).then(answer => {
     console.log(answer);
-    return connection.promise().query("INSERT INTO role SET?", {title: answer.roles, salary: answer.salary, department_id: answer.depts});
+    return connection.promise().query("INSERT INTO role SET?", { title: answer.role, salary: answer.salary, department_id: answer.depts });
   }).then(res => {
-    console.log("added new Role");
+    console.log("added new Role")
     startList();
   }).catch(err => {
     throw err
