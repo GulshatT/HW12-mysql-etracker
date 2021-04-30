@@ -1,6 +1,7 @@
 const mysql = require("mysql");
 const inquirer = require("inquirer");
 const pass = require("./img/config");
+const util = require("util");
 
 const connection = mysql.createConnection({
   host: "localhost",
@@ -24,14 +25,9 @@ function startList() {
       "View all Roles",
       "View all Employees",
       "Add department",
-      "Add Roles",
-      "Add Employees",
-      "Delete Departments",
-      "Delete Employee",
-      "Delete Roles",
-      "Update Employee Roles",
-      "Update Employee Manager",
-      "View Employee By Manager",
+      "Add employee",
+      "Delete department",
+      "Delete employee",
       "Exit"
     ]
   }).then(answer => {
@@ -54,26 +50,18 @@ function startList() {
         console.log(answer.option)
         addDepartment();
         break;
-
-      case "Add Roles":
-        addRoles();
-        break;
       
-      case "Add Employees":
+      case "Add employee":
         addEmployee();
         break;
 
-      case "Delete Roles":
-        deleteRole();
+      case "Delete employee":
+        deleteEmployee();
         break;
 
-      case "Update Employee Manager":
-        updateManager();
+      case "Delete department":
+        deleteDepartment();
         break
-      
-      case "View Employee By Manager":
-        viewEmployeeByManager();
-        break;
 
       case "Exit":
         connection.end();
@@ -139,154 +127,131 @@ function addDepartment() {
   });
 }
 
-function addRoles() {
-  console.log("add role");
-
-  connection.promise().query("SELECT * FROM Department")
-  .then((res) => {
-    //make the choice department arr
-    return res[0].map(dept => {
-      return {
-        name: dept.name,
-        value: dept.id
-      }
+function addEmployee() {
+  connection.query("SELECT * FROM role", function (err, res) {
+    if (err) throw err;
+    inquirer.prompt([
+     {
+       type: "input",
+       name: "first_name",
+       message: " please add name",
+     },
+     {
+       type: "input",
+       name: "last_name",
+       message: "please add the last name"
+     },
+     {
+       type: "list",
+       name: "role",
+       choices:
+       function() {
+         var roleArray = [];
+         for (let i = 0; i < res.length; i++) {
+           roleArray.push(res[i].title);
+         }
+         return roleArray;
+       },
+       message: "New employee Role"
+     }
+    ]).then(function (answer) {
+      let roleID;
+      for (let j=0; j < res.length; j++) {
+        if (res[j].title == answer.role) {
+          roleID = res[j].id;
+          console.log(roleID);
+        }
+      };
+      connection.query("INSERT INTO employee SET?",
+      {
+        first_name: answer.first_name,
+        last_name: answer.last_name,
+        role_id: roleID,
+      }, 
+      function (err) {
+        if (err) throw err;
+        console.log("added new employee");
+        startList();
+      })
     })
-  }).then((departments) => {
-    return inquirer.prompt([
-      {
-        type: "input",
-        name: "roles",
-        message: "Please add a role"
-      },
-      {
-        type: "input",
-        name: "salary",
-        message: "Please eneter a salary:"
-      },
-      {
-        type: "list",
-        name: "depts",
-        choices: departments,
-        message: "Please select your department"
-      }
-    ])
-  }).then(answer => {
+  }) 
+}
+
+async function deleteEmployee() {
+  connection.query = util.promisify(connection.query);
+  const employees = await connection.query("SELECT * FROM employee");
+  const employeeArray = employees.map(({first_name, last_name, id}) => ({
+    name: first_name + " " + last_name,
+    value: id
+  }))
+  console.log(employees);
+  inquirer.prompt({
+    type: "list",
+    name: "deleteEmployee",
+    message: "Please confirm that you want delete this employee",
+    choices: employeeArray
+  }).then(function (answer) {
     console.log(answer);
-    return connection.promise().query("INSERT INTO role SET?", { title: answer.role, salary: answer.salary, department_id: answer.depts });
-  }).then(res => {
-    console.log("added new Role")
-    startList();
-  }).catch(err => {
-    throw err
-  });
-}
-
-function selectRole() {
-  return connection.promise().query("SELECT * FROM role")
-  .then(res => {
-    return res[0].map(role => {
-      return {
-        name: role.title,
-        value: role.id
-      }
-    })
-  })
-}
-
-function selectManager() {
-  return connection.promise().query("SELECT * FROM employee")
-  .then(res => {
-    return res[0].map(manager=> {
-      return {
-        name:`${manager.first_name} ${manager.last_name}`,
-        value: manager.id,
-      }
-    })
-  })
-}
-
-async function addEmployee() {
-  const managers = await selectManager();
-  inquirer.prompt([
-    {
-      type: "input",
-      name: "firstname",
-      message: "Enter their first name"
-    }, 
-    {
-      type: "input",
-      name: "lastname", 
-      message: "Enter their last name"
-    },
-    {
-      type: "input",
-      name: "role",
-      message: "what is their role?",
-      choices: await selectRole()
-    },
-    {
-      type: "list",
-      name: "manager",
-      message: "What is their manager's name?",
-      choices: managers
-    }
-  ]).then (function (res) {
-    let roleId = res.role
-    let managerId = res.manager
-    
-    console.log({managerId});
-    connection.query("INSERT INTO Employee SET?",
-    {
-      firs_name: res.firstname,
-      last_name: res.lastname,
-      manager_id: managerId,
-      role_id: roleId
-    }, 
-    
-    function (err) {
-      if (err) throw err
-      console.table(res)
+    var query = "DELETE FROM employee WHERE ?";
+    var newId = answer.deleteEmployee;
+    console.log(newId);
+    connection.query(query, { id: newId}, function (err, res){
       startList();
-})
+    });
   })
 }
 
-function updateEmployeeRole() {
-  connection.promise().query("SELECT * FROM eployee")
-  .then((res) => {
-    return res[0].map(employee => {
-      return {
-        name: employee.first_name,
-        value: employee.id
-      }
-    })
-  })
-  .then(async (employeeList) => {
-    return inquirer.prompt([
-      {
-        type:"list",
-        name: "employeeListId",
-        choices: employeeList,
-        message: "Please select the employee you want to update the role:"
-      },
-    ])
-  }).then(answer => {
+async function deleteDepartment() {
+  connection.query = util.promisify(connection.query);
+  const departments = await connection.query("SELECT * FROM department");
+  const departmentArray = departments.map(({department_name, id}) => ({
+    name: department_name,
+    value: id
+  }))
+  console.log(departments);
+  inquirer.prompt({
+    type: "list",
+    name: "deleteDepartment",
+    message: "Please confirm that you want delete this department",
+    choices: departmentArray
+  }).then(function (answer) {
     console.log(answer);
-    return connection.promise().query("UPDATE employee SET role_id = ? Where id = ?",
-    [
-      answer.roleId,
-      answer.employeeListId,
-    ]
-    );
-  }).then(res => {
-    console.log("Updated successfully")
-    startList();
-  }).catch(err => {
-    throw err
-  });
+    var query = "DELETE FROM department WHERE ?";
+    var newId = answer.deleteDepartment;
+    console.log(newId);
+    connection.query(query, { id: newId}, function (err, res){
+      startList();
+    });
+  })
 }
-
-
+// function deleteDepartment() {
+//   connection.promise().query("SELECT * FROM department")
+//   .then((res) => {
+//     return res[0].map(dept => {
+//       return {
+//         name: dept.name,
+//         value: dept.id
+//       }
+//     })
+//   }).then((departments) => {
+//     return inquirer.prompt([
+//       {
+//         type: "list",
+//         name: "deptId",
+//         choices: departments,
+//         message:"Please confirm that you want delete this department"
+//       }
+//     ])
+//   }).then(answer => {
+//     console.log(answer);
+//     return connection.promise().query("DELETE FROM department WHERE id =?", answer.Id);
+//   }).then(res => {
+//     console.log("department deleted!")
+//     startList();
+//   }).catch(err => {
+//     throw err
+//   });
+// }
 // Connect to the DB
 connection.connect((err) => {
   if (err) throw err;
