@@ -14,6 +14,7 @@ const connection = mysql.createConnection({
   database: "employee_db",
 });
 
+//creating list prompt 
 function startList() {
   inquirer.prompt(
     {
@@ -177,6 +178,7 @@ function addEmployee() {
   }) 
 }
 
+//delete functions for employee and department
 async function deleteEmployee() {
   connection.query = util.promisify(connection.query);
   const employees = await connection.query("SELECT * FROM employee");
@@ -224,34 +226,6 @@ async function deleteDepartment() {
     });
   })
 }
-// function deleteDepartment() {
-//   connection.promise().query("SELECT * FROM department")
-//   .then((res) => {
-//     return res[0].map(dept => {
-//       return {
-//         name: dept.name,
-//         value: dept.id
-//       }
-//     })
-//   }).then((departments) => {
-//     return inquirer.prompt([
-//       {
-//         type: "list",
-//         name: "deptId",
-//         choices: departments,
-//         message:"Please confirm that you want delete this department"
-//       }
-//     ])
-//   }).then(answer => {
-//     console.log(answer);
-//     return connection.promise().query("DELETE FROM department WHERE id =?", answer.Id);
-//   }).then(res => {
-//     console.log("department deleted!")
-//     startList();
-//   }).catch(err => {
-//     throw err
-//   });
-// }
 // Connect to the DB
 connection.connect((err) => {
   if (err) throw err;
